@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FC Bayern München — Dashboard 2025/26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
+  :root {
+    --red: #DC143C;
+    --red-dark: #a00e2a;
+    --red-glow: rgba(220,20,60,0.18);
+    --gold: #e8c44a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --surface3: #272727;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: #888;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #111; color: var(--text); min-height: 100vh; }
+  #app { max-width: 860px; margin: 0 auto; padding: 20px; }
+  .header { background: var(--surface); border-bottom: 2px solid var(--red); padding: 14px 20px; display: flex; align-items: center; gap: 16px; border-radius: 10px 10px 0 0; }
+  .club-badge { width: 44px; height: 44px; background: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: white; flex-shrink: 0; border: 2px solid var(--gold); }
+  .header-title { flex: 1; }
+  .header-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--white); letter-spacing: 2px; }
+  .header-title p { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  .champion-badge { background: var(--gold); color: #1a1000; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; }
+  .tabs { display: flex; background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0 20px; gap: 4px; }
+  .tab { padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; letter-spacing: 0.5px; font-family: 'DM Sans', sans-serif; }
+  .tab.active { color: var(--red); border-bottom-color: var(--red); }
+  .tab:hover:not(.active) { color: var(--text); }
+  .page { display: none; padding: 20px; background: #111; }
+  .page.active { display: block; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .kpi { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; position: relative; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--red); }
+  .kpi-icon { font-size: 16px; margin-bottom: 6px; }
+  .kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--white); line-height: 1; }
+  .kpi-value.accent { color: var(--red); }
+  .kpi-value.gold { color: var(--gold); }
+  .kpi-label { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--white); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .section-title span { width: 3px; height: 16px; background: var(--red); border-radius: 2px; display: inline-block; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .chart-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .chart-box-full { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+  .form-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .form-badge { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 13px; position: relative; cursor: default; font-family: 'DM Sans', sans-serif; }
+  .form-badge .form-score { font-size: 9px; position: absolute; bottom: 1px; color: rgba(255,255,255,0.7); }
+  .form-W { background: #1a4d2e; color: #4ade80; border: 1px solid #2d7a4a; }
+  .form-D { background: #2d2a1a; color: #fbbf24; border: 1px solid #5a4e1a; }
+  .form-L { background: #4d1a1a; color: #f87171; border: 1px solid #7a2d2d; }
+  .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0; }
+  .gauge-label { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .player-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .player-table th { color: var(--muted); font-weight: 500; text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; }
+  .player-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  .player-table tr:last-child td { border-bottom: none; }
+  .player-table tr:hover td { background: var(--surface3); }
+  .rank-num { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--muted); }
+  .rank-num.top { color: var(--red); }
+  .stat-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .stat-bar { height: 6px; border-radius: 3px; background: var(--surface3); flex: 1; overflow: hidden; }
+  .stat-bar-fill { height: 100%; border-radius: 3px; }
+  .flag-row { display: flex; align-items: center; gap: 8px; }
+  .player-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .dax-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .dax-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--gold); letter-spacing: 1px; margin-bottom: 10px; }
+  .dax-code { background: #0d0d0d; border: 1px solid #333; border-radius: 6px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; color: #a8d8a8; line-height: 1.7; white-space: pre-wrap; }
+  .dax-comment { color: #666; }
+  .slicer-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .slicer-btn { background: var(--surface3); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--muted); cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .slicer-btn.active { background: var(--red-glow); border-color: var(--red); color: var(--white); }
+  .vs-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .vs-card { background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .vs-card.highlight { border-color: var(--red); background: var(--red-glow); }
+  .vs-team { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .vs-pts { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--white); }
+  .vs-pts.top { color: var(--red); }
+  .vs-record { font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="club-badge">FCB</div>
+    <div class="header-title">
+      <h1>FC Bayern München</h1>
+      <p>BUNDESLIGA 2025/26 — DASHBOARD ANALYTICS</p>
+    </div>
+    <div class="champion-badge">🏆 CAMPEONES</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('p1',this)">Dominio absoluto</button>
+    <button class="tab" onclick="showPage('p2',this)">Rendimiento del equipo</button>
+    <button class="tab" onclick="showPage('p3',this)">Estrellas del equipo</button>
+    <button class="tab" onclick="showPage('p4',this)">Medidas DAX</button>
+  </div>
+
+  <!-- PAGE 1 -->
+  <div class="page active" id="p1">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-icon">🥇</div><div class="kpi-value gold">1°</div><div class="kpi-label">Posición final</div></div>
+      <div class="kpi"><div class="kpi-icon">📋</div><div class="kpi-value">29</div><div class="kpi-label">Partidos</div></div>
+      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-value accent">24</div><div class="kpi-label">Victorias</div><div class="kpi-sub">4 empates · 1 derrota</div></div>
+      <div class="kpi"><div class="kpi-icon">⚽</div><div class="kpi-value accent">105</div><div class="kpi-label">Goles a favor</div><div class="kpi-sub">Récord histórico</div></div>
+      <div class="kpi"><div class="kpi-icon">🛡️</div><div class="kpi-value">27</div><div class="kpi-label">Goles en contra</div><div class="kpi-sub">Mejor defensa</div></div>
+      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-value">+78</div><div class="kpi-label">Diferencia goles</div></div>
+      <div class="kpi"><div class="kpi-icon">🏅</div><div class="kpi-value gold">76</div><div class="kpi-label">Puntos</div></div>
+      <div class="kpi"><div class="kpi-icon">🔒</div><div class="kpi-value">11</div><div class="kpi-label">Porterías a cero</div></div>
+    </div>
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="section-title"><span></span>Forma reciente — últimos 8 partidos</div>
+        <div class="form-row" id="form-badges"></div>
+      </div>
+      <div class="chart-box">
+        <div class="section-title"><span></span>Indicadores clave</div>
+        <div style="display:flex;justify-content:space-around;">
+          <div class="gauge-wrap">
+            <svg width="100" height="60" viewBox="0 0 100 60">
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#2a2a2a" stroke-width="10" stroke-linecap="round"/>
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#DC143C" stroke-width="10" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="18"/>
+              <text x="50" y="52" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="16" fill="#f0f0f0">82.8%</text>
+            </svg>
+            <div class="gauge-label">Win Rate</div>
+          </div>
+          <div class="gauge-wrap">
+            <svg width="100" height="60" viewBox="0 0 100 60">
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#2a2a2a" stroke-width="10" stroke-linecap="round"/>
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#e8c44a" stroke-width="10" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="55"/>
+              <text x="50" y="52" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="14" fill="#f0f0f0">3.62</text>
+            </svg>
+            <div class="gauge-label">Goles/partido</div>
+          </div>
+          <div class="gauge-wrap">
+            <svg width="100" height="60" viewBox="0 0 100 60">
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#2a2a2a" stroke-width="10" stroke-linecap="round"/>
+              <path d="M10 55 A40 40 0 0 1 90 55" fill="none" stroke="#4ade80" stroke-width="10" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="48"/>
+              <text x="50" y="52" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="14" fill="#f0f0f0">37.9%</text>
+            </svg>
+            <div class="gauge-label">Clean Sheets</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-box-full">
+      <div class="section-title"><span></span>Distribución de resultados</div>
+      <div style="position:relative;width:100%;height:200px;"><canvas id="resultsChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page" id="p2">
+    <div class="slicer-row" id="slicers">
+      <button class="slicer-btn active" onclick="filterVenue('all',this)">Todos los partidos</button>
+      <button class="slicer-btn" onclick="filterVenue('home',this)">Local</button>
+      <button class="slicer-btn" onclick="filterVenue('away',this)">Visitante</button>
+    </div>
+    <div class="chart-box-full">
+      <div class="section-title"><span></span>Evolución de goles por partido (temporada)</div>
+      <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#DC143C;"></div>Goles a favor</div><div class="legend-item"><div class="legend-dot" style="background:#555;"></div>Goles en contra</div></div>
+      <div style="position:relative;width:100%;height:220px;"><canvas id="goalsLineChart"></canvas></div>
+    </div>
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="section-title"><span></span>Local vs visitante</div>
+        <div style="position:relative;width:100%;height:220px;"><canvas id="homeAwayChart"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <div class="section-title"><span></span>Top 5 Bundesliga 2025/26</div>
+        <div class="vs-grid">
+          <div class="vs-card highlight"><div class="vs-team">Bayern</div><div class="vs-pts top">76</div><div class="vs-record">24W·4D·1L</div></div>
+          <div class="vs-card"><div class="vs-team">B. Dortmund</div><div class="vs-pts">63</div><div class="vs-record">19W·6D·4L</div></div>
+          <div class="vs-card"><div class="vs-team">Leverkusen</div><div class="vs-pts">58</div><div class="vs-record">17W·7D·5L</div></div>
+          <div class="vs-card"><div class="vs-team">Leipzig</div><div class="vs-pts">54</div><div class="vs-record">16W·6D·7L</div></div>
+          <div class="vs-card"><div class="vs-team">Frankfurt</div><div class="vs-pts">50</div><div class="vs-record">14W·8D·7L</div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">DIFERENCIA SOBRE 2°</div>
+          <div style="background:var(--surface3);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);">+13</div>
+            <div style="font-size:12px;color:var(--muted);">puntos sobre el<br>2° clasificado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3 -->
+  <div class="page" id="p3">
+    <div class="slicer-row">
+      <button class="slicer-btn active" onclick="filterStat('goals',this)">Goles</button>
+      <button class="slicer-btn" onclick="filterStat('assists',this)">Asistencias</button>
+      <button class="slicer-btn" onclick="filterStat('contributions',this)">Participaciones</button>
+    </div>
+    <div class="chart-box-full">
+      <div class="section-title"><span></span>Top 5 goleadores — barras horizontales</div>
+      <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#DC143C;"></div>Goles</div><div class="legend-item"><div class="legend-dot" style="background:#e8c44a;"></div>Asistencias</div></div>
+      <div style="position:relative;width:100%;height:260px;"><canvas id="playersChart"></canvas></div>
+    </div>
+    <div class="chart-box-full">
+      <div class="section-title"><span></span>Tabla dinámica de jugadores</div>
+      <table class="player-table" id="playerTable">
+        <thead><tr>
+          <th>#</th><th>Jugador</th><th>Nac.</th>
+          <th onclick="sortTable('goals')">Goles ↕</th>
+          <th onclick="sortTable('assists')">Asist. ↕</th>
+          <th>Part.</th><th>G/P</th><th>Contribuciones</th>
+        </tr></thead>
+        <tbody id="playerTbody"></tbody>
+      </table>
+    </div>
+    <div class="chart-box-full">
+      <div class="section-title"><span></span>18 goleadores distintos — diversidad ofensiva</div>
+      <div style="position:relative;width:100%;height:160px;"><canvas id="scorerSpreadChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PAGE 4: DAX -->
+  <div class="page" id="p4">
+    <div class="dax-section">
+      <div class="dax-title">📐 Tabla de hechos — Partidos (tbl_Matches)</div>
+      <div class="dax-code"><span class="dax-comment">// Columnas requeridas:</span>
+MatchID, Date, Opponent, Venue (Home/Away),
+GoalsFor, GoalsAgainst, Result (W/D/L),
+Points, Matchday</div>
+    </div>
+    <div class="dax-section">
+      <div class="dax-title">👤 Tabla de dimensión — Jugadores (tbl_Players)</div>
+      <div class="dax-code"><span class="dax-comment">// Columnas requeridas:</span>
+PlayerID, Name, Nationality, Position,
+Goals, Assists, Appearances, MinutesPlayed</div>
+    </div>
+    <div class="dax-section">
+      <div class="dax-title">📏 Medidas DAX — Rendimiento del equipo</div>
+      <div class="dax-code"><span class="dax-comment">// Win Rate</span>
+Win Rate =
+DIVIDE(
+    COUNTROWS(FILTER(tbl_Matches, tbl_Matches[Result] = "W")),
+    COUNTROWS(tbl_Matches)
+) * 100
+
+<span class="dax-comment">// Goals per Game</span>
+Goals per Game =
+DIVIDE(SUM(tbl_Matches[GoalsFor]), COUNTROWS(tbl_Matches))
+
+<span class="dax-comment">// Goal Difference</span>
+Goal Difference =
+SUM(tbl_Matches[GoalsFor]) - SUM(tbl_Matches[GoalsAgainst])
+
+<span class="dax-comment">// Points Total</span>
+Points Total =
+CALCULATE(SUM(tbl_Matches[Points]))
+
+<span class="dax-comment">// Clean Sheets</span>
+Clean Sheets =
+COUNTROWS(FILTER(tbl_Matches, tbl_Matches[GoalsAgainst] = 0))
+
+<span class="dax-comment">// Clean Sheet %</span>
+Clean Sheet Pct =
+DIVIDE([Clean Sheets], COUNTROWS(tbl_Matches)) * 100</div>
+    </div>
+    <div class="dax-section">
+      <div class="dax-title">📏 Medidas DAX — Jugadores</div>
+      <div class="dax-code"><span class="dax-comment">// Goals per Appearance</span>
+Goals per Game (Player) =
+DIVIDE(
+    SUM(tbl_Players[Goals]),
+    SUM(tbl_Players[Appearances])
+)
+
+<span class="dax-comment">// Goal Contributions</span>
+Goal Contributions =
+SUM(tbl_Players[Goals]) + SUM(tbl_Players[Assists])
+
+<span class="dax-comment">// Contribution Rate</span>
+Contribution Rate =
+DIVIDE([Goal Contributions], [Total Team Goals]) * 100
+
+<span class="dax-comment">// Top Scorer</span>
+Top Scorer =
+FIRSTNONBLANK(
+    TOPN(1,
+        VALUES(tbl_Players[Name]),
+        CALCULATE(SUM(tbl_Players[Goals])),
+        DESC
+    ),
+    1
+)
+
+<span class="dax-comment">// Running Points</span>
+Running Points =
+CALCULATE(
+    SUM(tbl_Matches[Points]),
+    FILTER(
+        ALL(tbl_Matches),
+        tbl_Matches[Matchday] &lt;= MAX(tbl_Matches[Matchday])
+    )
+)</div>
+    </div>
+    <div class="dax-section">
+      <div class="dax-title">📏 Medidas DAX — Home vs Away</div>
+      <div class="dax-code"><span class="dax-comment">// Goals Home</span>
+Goals Home =
+CALCULATE(
+    SUM(tbl_Matches[GoalsFor]),
+    tbl_Matches[Venue] = "Home"
+)
+
+<span class="dax-comment">// Goals Away</span>
+Goals Away =
+CALCULATE(
+    SUM(tbl_Matches[GoalsFor]),
+    tbl_Matches[Venue] = "Away"
+)
+
+<span class="dax-comment">// Win Rate Home</span>
+Win Rate Home =
+CALCULATE([Win Rate], tbl_Matches[Venue] = "Home")
+
+<span class="dax-comment">// Win Rate Away</span>
+Win Rate Away =
+CALCULATE([Win Rate], tbl_Matches[Venue] = "Away")</div>
+    </div>
+    <div class="dax-section">
+      <div class="dax-title">🎨 Tema JSON para Power BI Desktop</div>
+      <div class="dax-code">{
+  "name": "Bayern Dark Theme",
+  "dataColors": [
+    "#DC143C","#e8c44a","#4ade80",
+    "#60a5fa","#f97316","#a78bfa","#fb7185"
+  ],
+  "background": "#141414",
+  "foreground": "#f0f0f0",
+  "tableAccent": "#DC143C"
+}</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const recentForm = [
+  {r:'W',s:'5-0'},{r:'W',s:'4-1'},{r:'W',s:'3-0'},{r:'D',s:'2-2'},
+  {r:'W',s:'6-1'},{r:'W',s:'3-1'},{r:'W',s:'4-0'},{r:'W',s:'2-1'}
+];
+const fb = document.getElementById('form-badges');
+recentForm.forEach(m => {
+  const d = document.createElement('div');
+  d.className = 'form-badge form-' + m.r;
+  d.innerHTML = m.r + '<span class="form-score">' + m.s + '</span>';
+  d.title = (m.r==='W'?'Victoria':m.r==='D'?'Empate':'Derrota') + ' ' + m.s;
+  fb.appendChild(d);
+});
+
+const players = [
+  {name:'Harry Kane',nat:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',pos:'ST',goals:32,assists:7,apps:28,color:'#DC143C'},
+  {name:'Luis Díaz',nat:'🇨🇴',pos:'LW',goals:15,assists:9,apps:26,color:'#e8c44a'},
+  {name:'Michael Olise',nat:'🇫🇷',pos:'RW',goals:12,assists:18,apps:27,color:'#4ade80'},
+  {name:'Jamal Musiala',nat:'🇩🇪',pos:'AM',goals:9,assists:11,apps:25,color:'#60a5fa'},
+  {name:'Serge Gnabry',nat:'🇩🇪',pos:'RW',goals:8,assists:6,apps:22,color:'#f97316'},
+  {name:'Leroy Sané',nat:'🇩🇪',pos:'LW',goals:7,assists:8,apps:24,color:'#a78bfa'},
+  {name:'Thomas Müller',nat:'🇩🇪',pos:'SS',goals:4,assists:10,apps:23,color:'#fb7185'},
+];
+
+let currentSort = 'goals';
+let sortAsc = false;
+
+function renderTable(data) {
+  const tb = document.getElementById('playerTbody');
+  tb.innerHTML = '';
+  data.forEach((p,i) => {
+    const contrib = p.goals + p.assists;
+    const gpp = (p.goals / p.apps).toFixed(2);
+    const barW = Math.round((p.goals / 32) * 100);
+    tb.innerHTML += `<tr>
+      <td><span class="rank-num ${i<3?'top':''}">${i+1}</span></td>
+      <td><div class="flag-row"><div class="player-avatar" style="background:${p.color}22;color:${p.color}">${p.name.split(' ').map(n=>n[0]).join('')}</div>${p.name}</div></td>
+      <td style="font-size:16px;">${p.nat}</td>
+      <td><div class="stat-bar-wrap"><div class="stat-bar"><div class="stat-bar-fill" style="width:${barW}%;background:#DC143C;"></div></div><span style="font-weight:500;color:#DC143C;min-width:22px;text-align:right;">${p.goals}</span></div></td>
+      <td style="color:#e8c44a;font-weight:500;">${p.assists}</td>
+      <td>${p.apps}</td>
+      <td style="color:#aaa;">${gpp}</td>
+      <td><div class="stat-bar-wrap"><div class="stat-bar" style="flex:1"><div class="stat-bar-fill" style="width:${Math.round(contrib/50*100)}%;background:linear-gradient(90deg,#DC143C,#e8c44a);"></div></div><span style="min-width:22px;text-align:right;">${contrib}</span></div></td>
+    </tr>`;
+  });
+}
+
+function sortTable(col) {
+  if (currentSort === col) sortAsc = !sortAsc;
+  else { currentSort = col; sortAsc = false; }
+  const sorted = [...players].sort((a,b) => sortAsc ? a[col]-b[col] : b[col]-a[col]);
+  renderTable(sorted);
+}
+
+renderTable(players);
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='p1') setTimeout(drawP1, 50);
+  if (id==='p2') setTimeout(drawP2, 50);
+  if (id==='p3') setTimeout(drawP3, 50);
+}
+
+function filterVenue(v,btn) {
+  document.querySelectorAll('#slicers .slicer-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function filterStat(s,btn) {
+  document.querySelectorAll('.slicer-row .slicer-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+let charts = {};
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function drawP1() {
+  destroyChart('resultsChart');
+  const ctx = document.getElementById('resultsChart');
+  if (!ctx) return;
+  charts['resultsChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Victorias','Empates','Derrota'],
+      datasets: [{ label: 'Partidos', data: [24,4,1], backgroundColor: ['#DC143C','#e8c44a','#555'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888', stepSize: 5 }, max: 28 }
+      }
+    }
+  });
+}
+
+function drawP2() {
+  destroyChart('goalsLineChart'); destroyChart('homeAwayChart');
+  const labels = ['J1','J2','J3','J4','J5','J6','J7','J8','J9','J10','J11','J12','J13','J14','J15'];
+  const gf = [4,3,5,2,6,3,4,5,2,4,3,6,4,5,4];
+  const gc = [1,0,2,1,1,0,2,0,1,1,0,2,0,1,0];
+  const ctx1 = document.getElementById('goalsLineChart');
+  if (ctx1) charts['goalsLineChart'] = new Chart(ctx1, {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'GF', data: gf, borderColor: '#DC143C', backgroundColor: 'rgba(220,20,60,0.08)', tension: 0.4, pointBackgroundColor: '#DC143C', pointRadius: 4, fill: true },
+      { label: 'GC', data: gc, borderColor: '#555', backgroundColor: 'rgba(85,85,85,0.06)', tension: 0.4, pointBackgroundColor: '#555', pointRadius: 4, borderDash: [4,3], fill: true }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888', font: { size: 11 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888' } } }
+    }
+  });
+  const ctx2 = document.getElementById('homeAwayChart');
+  if (ctx2) charts['homeAwayChart'] = new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: ['Goles a favor','Goles en contra','Victorias'], datasets: [
+      { label: 'Casa', data: [58,13,13], backgroundColor: '#DC143C', borderRadius: 4 },
+      { label: 'Fuera', data: [47,14,11], backgroundColor: '#3a3a3a', borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888', font: { size: 11 } } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888' } } }
+    }
+  });
+}
+
+function drawP3() {
+  destroyChart('playersChart'); destroyChart('scorerSpreadChart');
+  const ctx = document.getElementById('playersChart');
+  if (ctx) charts['playersChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ['Kane','Díaz','Olise','Musiala','Gnabry'], datasets: [
+      { label: 'Goles', data: [32,15,12,9,8], backgroundColor: '#DC143C', borderRadius: 4 },
+      { label: 'Asistencias', data: [7,9,18,11,6], backgroundColor: '#e8c44a', borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { stacked: false, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888' } }, y: { grid: { display: false }, ticks: { color: '#ccc', font: { weight: '500' } } } }
+    }
+  });
+  const ctx2 = document.getElementById('scorerSpreadChart');
+  const allScorers = [32,15,12,9,8,7,4,3,3,2,2,2,1,1,1,1,1,0];
+  if (ctx2) charts['scorerSpreadChart'] = new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: ['Kane','Díaz','Olise','Musiala','Gnabry','Sané','Müller','P1','P2','P3','P4','P5','P6','P7','P8','P9','P10','Otros'],
+      datasets: [{ label: 'Goles', data: allScorers, backgroundColor: allScorers.map((v,i) => i===0?'#DC143C':i<5?'rgba(220,20,60,0.6)':'rgba(220,20,60,0.25)'), borderRadius: 3 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#666', font: { size: 10 }, maxRotation: 35 } }, y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#888' } } }
+    }
+  });
+}
+
+function copyLinkedIn() {
+  const text = document.getElementById('linkedin-text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '¡Copiado!';
+    btn.style.background = '#1a4d2e';
+    setTimeout(() => { btn.textContent = 'Copiar texto LinkedIn'; btn.style.background = 'var(--red)'; }, 2000);
+  });
+}
+
+setTimeout(drawP1, 200);
+</script>
+</body>
+</html>
